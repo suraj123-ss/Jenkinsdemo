@@ -1,0 +1,73 @@
+pipeline {
+    agent any
+ 
+    environment {
+        // Docker registry credentials ID in Jenkins
+        DOCKER_REGISTRY_CREDENTIALS_ID = 'docker-registry-credentials'
+        // Docker registry URL
+        DOCKER_REGISTRY_URL = 'your-docker-registry-url'
+        // Docker image names
+        DOCKER_IMAGE1 = 'your-image-name-1'
+        DOCKER_IMAGE2 = 'your-image-name-2'
+        DOCKER_IMAGE3 = 'your-image-name-3'
+        // Docker image tag (can use Git commit hash, build number, or other identifiers)
+        DOCKER_IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
+ 
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the source code from the repository
+                checkout scm
+            }
+        }
+ 
+        stage('Build and Push Docker Image 1') {
+            steps {
+                script {
+                    // Build the first Docker image
+                    def dockerImage1 = docker.build("${DOCKER_IMAGE1}:${DOCKER_IMAGE_TAG}")
+                    // Push the first Docker image
+                    docker.withRegistry("https://${DOCKER_REGISTRY_URL}", "${DOCKER_REGISTRY_CREDENTIALS_ID}") {
+                        dockerImage1.push()
+                    }
+                }
+            }
+        }
+ 
+        stage('Build and Push Docker Image 2') {
+            steps {
+                script {
+                    // Build the second Docker image
+                    def dockerImage2 = docker.build("${DOCKER_IMAGE2}:${DOCKER_IMAGE_TAG}")
+                    // Push the second Docker image
+                    docker.withRegistry("https://${DOCKER_REGISTRY_URL}", "${DOCKER_REGISTRY_CREDENTIALS_ID}") {
+                        dockerImage2.push()
+                    }
+                }
+            }
+        }
+ 
+        stage('Build and Push Docker Image 3') {
+            steps {
+                script {
+                    // Build the third Docker image
+                    def dockerImage3 = docker.build("${DOCKER_IMAGE3}:${DOCKER_IMAGE_TAG}")
+                    // Push the third Docker image
+                    docker.withRegistry("https://${DOCKER_REGISTRY_URL}", "${DOCKER_REGISTRY_CREDENTIALS_ID}") {
+                        dockerImage3.push()
+                    }
+                }
+            }
+        }
+    }
+ 
+    post {
+        always {
+            script {
+                // Clean up the workspace after the build
+                cleanWs()
+            }
+        }
+    }
+}
